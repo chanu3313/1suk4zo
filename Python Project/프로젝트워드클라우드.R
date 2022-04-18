@@ -2,13 +2,16 @@ install.packages("rJava") #r에서 Java를 사용한 패키지 사용
 install.packages("memoise") #koNLP패키지가 사용하는 패키지
 install.packages("KoNLP") #한국어 자연어 처리 
 install.packages("stringr") #문자열을 처리하는 여러가지 함수를가지고 있는 패키지
-install.packages("wordcloud") #워드클라우드를 그려주는 패키지 #패키지 라이브러리에 올리기
+install.packages("wordcloud")
+install.packages("wordcloud2")
+#워드클라우드를 그려주는 패키지 #패키지 라이브러리에 올리기
 library(KoNLP)
 library(stringr) 
 library(wordcloud) 
+library(wordcloud2) 
 search()
 setwd('data')
-setwd('D:project1/1suk4zo/Project/data')
+setwd('D:/project1/1suk4zo/Python Project/data')
 
 Sys.getlocale()
 Sys.setlocale("LC_ALL","C")
@@ -145,11 +148,18 @@ dd <- table(d)
 
 palete <- brewer.pal(9,"Set3")
 wordcloud(names(dd), 
-          freq=dd,   
+          freq=dd,
           scale=c(5,1),     
           rot.per=0.25,     
           min.freq = 1,     
           random.order = F, 
           random.color = T, 
           colors = palete)
+
+# 별모양 워드 크라우드
+wordcloud2(dd, size = 0.7,
+           fontFamily = 'Segoe UI', fontWeight = 'bold',
+           color = 'random-dark', backgroundColor = "white",
+           rotateRatio = 0.4, shape = 'star', ellipticity = 0.65,)
+
 
