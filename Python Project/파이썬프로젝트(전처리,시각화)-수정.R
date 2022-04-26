@@ -15,7 +15,8 @@ library(readxl) # xl을 불러오는 패키지
 library('tidyverse') # dplyr, tidyr, ggplot2 등 tidy 패키지 생태계에 속하는 핵심 패키지들을 한번에 설치 및 관리 (lubridate를 사용하기위한 선행 패키지)
 library('lubridate') # 날짜와 시간을 다루는 패키지
 library(scales) # 축과 범례의 파손 및 레이블을 자동으로 결정하는 방법을 제공하는 시각화를 위한 척도 함수
-
+library(lubridate) # 시간형 자료를 관리및 처리하기 위한 함수
+library(reshape2) # 옆으로 컬럼이 많은 형태 ( Wide )를 세로로 긴 (Long) 형탤 변경해주고 세로로 긴형태를 옆으로 넣게바꿔줌
 ### 데이터 불러오기
 crash <- read.csv("data/도로교통공단_서울시 일별 시간별 교통사고 현황_20191231.csv")
 weather <- read.csv("data/2017-2019날씨데이터_1.csv")
@@ -250,6 +251,115 @@ ggChoropleth(data=acci_gu_code,
 
 
 
+#데이터 불러오기 
+crash1 <- crash[-c(2:12)] #자료가공
+
+#불러온 데이터 가공 (필요없는 속성 삭제)
+humidity2 <- humidity[-c(1,2)] #자료가공
+humidity3 <- humidity2[-c(3,4)]#자료가공
+humidity4 <- table (crash1$발생일) #데이터입력
+humidity5<-cbind(humidity3,humidity4) #2개의 데이터 교집
+humidity5 <- humidity5[-c(3)] #데이터 가공
+
+
+df<-humidity5 #데이터 이름 변경
+
+#시각화 하기전 평균.상대습도 범위에 따른 총 사건수 를 구하기 위한 조건문
+# 20~90 까지 10단위를 기준으로 한 열을 메인으로 데이터를 나누었다. (시각화를 할시 x축값에 넣을 변수작성을 같이하기위함)
+# 습도량 나누기
+df2 <- df[df$평균.상대습도...>20&df$평균.상대습도...<=30,] #20이상 30이하 
+View(df2)
+df3 <- df[df$평균.상대습도...>30&df$평균.상대습도...<=40,] #30이상 40이하
+View(df3)
+df4 <- df[df$평균.상대습도...>40&df$평균.상대습도...<=50, ]#40이상 50이하
+View(df4) 
+df4 <- df[df$평균.상대습도...>50&df$평균.상대습도...<=60,] #50이상 60이하
+View(df5)
+df5 <- df[df$평균.상대습도...>60&df$평균.상대습도...<=70,] #60이상 70이하
+View(df6)
+df6 <- df[df$평균.상대습도...>70&df$평균.상대습도...<=80,] #70이상 80이하
+View(df7)
+df7 <- df[df$평균.상대습도...>80&df$평균.상대습도...<=90,] #80이상 90이하
+
+df8 <- df[df$평균.상대습도...>=90&df$평균.상대습도...<=100,]# 32~46줄 평균 상대습도에따른 각각의 평균 빈도수 구하기
+
+#위 조건문으로 예시(습도20이상30이하의 총건수가 열로 나왔기에 구할려는 열뺴고 나머지삭제)
+# 일시하고 평균 습도 삭제 평균습도는 위 df2~df8 시리즈에서 값을 구해서 시각화떄 저거 쓰면 됩니다.
+#일시, 평균습도 삭제
+# (시각화 데이터만들기전 필요한 데이터를제외 전부다 삭제하여 이데이터를 그대로 가져다가 시각화에 쓸 예정)
+ac2 <- df2[-c(1,2)] #필요없는 속성 삭제 52~ 58줄
+ac3 <- df3[-c(1,2)]
+ac4 <- df4[-c(1,2)]
+ac5 <- df5[-c(1,2)]
+ac6 <- df6[-c(1,2)]
+ac7 <- df7[-c(1,2)]
+ac8 <- df8[-c(1,2)] 
+
+# 1열로 쭉 건수만 있는상태 그걸 다 더하고 평균빈도를 나타내는 mean 함수적용(sum으로하면 숫자가 너무커서 그래프가 별의미 없어보인다.)
+#모든사건사고수 mean으로 평균구하기
+# df들은 각각 열로 모든 사건수이기에 그걸 평균을 구하는 mean함수로 데이터를 더정교하게 바꿈
+b2<-mean(ac2$Freq)  #62~68줄 d
+b3<-mean(ac3$Freq)
+b4<-mean(ac4$Freq)
+b5<-mean(ac5$Freq)
+b6<-mean(ac6$Freq)
+b7<-mean(ac7$Freq)
+b8<-mean(ac8$Freq)  
+
+# 위 데이터 가공한 속성들로 시각화할 데이터 프레임 만들기
+Humidity<- c(20~30,30~40,40~50,50~60,60~70,70~80,80~90) #시각화할데이터의 x축 값 데이터프레임만들기
+Freq<- c(96,103,105,103,104,104,110) # y축값 데이터프레임
+dfc <- data.frame(Humidity = c(20~30,30~40,40~50,50~60,60~70,70~80,80~90), #x축,y축 통합 
+                  Freq = c(96,103,105,103,104,104,110))  
+
+# 막대 그래프그리기
+ggplot(data,aes(x=Humidity,y=Freq))+ # 막대그래프 버젼으로 시각화 
+  geom_bar(stat="identity")
+# 다른 시각화 자료에 맞춰서 선그래프로 변경 
+
+Humidity <-c(20,30,40,50,60,70,80)  # 선그래프 버젼 x축 20~30 은 데이터값이 달라져서 안넣어져서 새로 만듬
+#선그래프 그리기 
+plot(Humidity,                                   #x data
+     Freq,                                       #y data
+     main="습도와 사건빈도",                  #제목
+     type="l",                                 #그래프의 종류 선택(알파벳) Line
+     lty=1,                                     #선의 종류(Line Type) 선택
+     lwd=1,                                    #선의 굵기 선택
+     xlab="Humidity",                          #x축 레이블
+     ylab="Freq"                         #y축 레이블
+)
+
+#data4가 1월1일 자료부터 12월31일까지 일별로 총사건수가 있음
+
+
+#날짜 월단위를 추가해야 알수있기에 날짜 열 추가
+colnames(humidity4) = c("date","Freq") #월단위로 바꾸기위해서 date 열이 필요하기에 열이름변경
+humidity4<-rename(humidity4,"날짜"="Var1") #Var1 이름을 명확하게 알수있게 날짜로 이름변경
+#날짜 넣기위한 패키지설치
+dw <- cbind(humidity5, month=month(humidity5$일시)) #month 월단위 1월 2월 3월 열 추가 및 분류
+#month 월단위 기준으로 Freq값을 다더해서 월단위 그래프 값준비완료
+dw2<-dcast(dw, month ~ . , value.var="Freq", sum) # month 값을 기준으로 Freq 총 사건수양을 다더하기
+
+
+#그래프에 이름을 넣기위해 열이름 x축값 y축값으로 미리 이름변경
+names(dw2)=c("월","총사건수") #이름 변경
+
+# 월단위 사건수량 
+ggplot(dw2,aes(x=월,y=총사건수))+  #x축y축 데이터넣기
+  geom_bar(stat="identity",fill="gold",colour="black")+ #막대그래프형태,노랑색넣기,겉태두리 검정넣기
+  scale_x_continuous(breaks=seq(1,12,1)) #x축 눈금 1~12 넣고 간격 1로 조절
+theme(axis.text.x=element_text(colour="blue", size=12,hjust=0,vjust=1))+ #아래 x축 이름크기및 간격조절
+  theme(axis.text.y=element_text(size=rel(2),colour="red", #y축 크기조절및 간격조절
+                                 vjust=1))
+
+
+
+
+
+#아래는 잘못만든 그래프및 일단 필요없는 변수들
+
+
+
 
 
 
@@ -349,7 +459,6 @@ summary(model)
 # --> mean평균기온, total일강수량, mean평균상대습도, total일조시간 각각의 변수의 p-value값이 0.05이하이다.
 # 따라서 유의수준 5%에서 각각의 변수가 사고건수에 영향을 미치는 유의한 변수라고 볼 수 있다.
 # p-value < 0.05로 유의수준 5%에서 적절한 회귀 모델이라고 판단된다.
-
 
 
 
