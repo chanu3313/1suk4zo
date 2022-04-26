@@ -26,7 +26,7 @@ ggplot(local_rain,aes(x=reorder(발생지_시군구,지역_사고건수평균)))
 local_temp <- new_cwh %>% select(발생지_시군구, total사고건수,평균기온) %>%
   group_by(발생지_시군구) %>%
   summarise(지역_사고건수평균=mean(total사고건수), 지역_평균기온=mean(평균기온))
-View(local_temp)
+
 # 구별 평균기온 시각화
 ggplot(local_temp,aes(x=reorder(발생지_시군구, 지역_사고건수평균)))+
   geom_col(aes(y=지역_평균기온),group=1, fill=c('ivory')) +
@@ -71,57 +71,6 @@ ggplot(new_cwh1, aes(x=발생지_시군구, y=total사고건수, fill=계절))+g
 cor(new_cwh[,4:8])
 #               total사고건수   평균기온    일강수량 평균상대습도 합계일조시간
 #total사고건수   1.000000000   0.03978881  0.01949351  0.009984152   0.02824370
-
-cor.test(new_cwh$total사고건수, new_cwh$평균기온 ,method='pearson')
-
-# Pearson's product-moment correlation
-
-# data:  new_cwh$total사고건수 and new_cwh$평균기온
-# t = 6.361, df = 25518, p-value = 2.038e-10
-# alternative hypothesis: true correlation is not equal to 0
-# 95 percent confidence interval:
-#  0.02753318 0.05203247
-# sample estimates:
-#        cor 
-# 0.03978881 
-
-cor.test(new_cwh$total사고건수, new_cwh$일강수량 ,method='pearson')
-
-# Pearson's product-moment correlation
-# 
-# data:  new_cwh$total사고건수 and new_cwh$일강수량
-# t = 3.1146, df = 25518, p-value = 0.001844
-# alternative hypothesis: true correlation is not equal to 0
-# 95 percent confidence interval:
-#  0.007226169 0.031754978
-# sample estimates:
-#        cor 
-# 0.01949351
-
-cor.test(local_rain_temp$지역_평균기온,local_rain_temp$지역_사고건수평균)
-# Pearson's product-moment correlation
-# 
-# data:  local_rain_temp$지역_평균기온 and local_rain_temp$지역_사고건수평균
-# t = 1.7831, df = 23, p-value = 0.08777
-# alternative hypothesis: true correlation is not equal to 0
-# 95 percent confidence interval:
-#  -0.05408185  0.65362226
-# sample estimates:
-#       cor 
-# 0.3484962 
-
-cor.test(local_rain_temp$지역_강수량,local_rain_temp$지역_사고건수평균)
-
-# Pearson's product-moment correlation
-# 
-# data:  local_rain_temp$지역_강수량 and local_rain_temp$지역_사고건수평균
-# t = -0.07683, df = 23, p-value = 0.9394
-# alternative hypothesis: true correlation is not equal to 0
-# 95 percent confidence interval:
-#  -0.4085632  0.3815275
-# sample estimates:
-#         cor 
-# -0.01601816 
 
 # 강수량과 습도의 상관관계
 head(new_cwh)

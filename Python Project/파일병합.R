@@ -1,6 +1,6 @@
 getwd()
 
-setwd("C:/project/1suk4zo/Python Project")
+setwd("D:/project1/1suk4zo/Python Project")
 getwd()
 
 crash <- read.csv("data/도로교통공단_서울시 일별 시간별 교통사고 현황_20191231.csv")
@@ -19,6 +19,7 @@ View(weather)
 weather
 
 library(dplyr)
+library(readxl)
 
 
 weather <- rename(weather, 발생지_시군구=지점명, 발생일=일시)
@@ -33,47 +34,48 @@ crash_weather_humidity <- left_join(crash_weather,humidity,by='발생일')
 
 # 복사본 생성(원본 유지)
 c_w_h <- crash_weather_humidity
-View(c_w_h)
-dim(c_w)
-str(c_w)
-View(c_w)
-summary(c_w)
 
-# 평균기온 결측치 제거
-c_w$평균기온..C.
-c_w <- c_w[!is.na(c_w$평균기온..C.),]
-View(c_w)
-dim(c_w)
-# [1] 112192     15
+# 일별 사고건수_강수량 으로 합치기
+acci_sum <- c_w_h %>%
+  group_by(발생일)%>%
+  summarise(사고건수 =sum(사고건수))
+acci_sum
 
-plot(c_w$평균기온..C., c_w$사고건수)
-barplot(c_w$평균기온..C., c_w$사고건수)
+rain <- weather %>%
+  group_by(발생일)%>%
+  summarise(강수량 =max(일강수량.mm.))
+View(rain)
 
-str(c_w$발생일)
+acci_rain <- left_join(acci_sum,rain,by='발생일')
 
-factor <- factor(c_w$발생일)
-c_w$발생일 <- as.Date(c_w$발생일, format = "%Y-%m-%d")
-View(c_w)
+acci_rain
+View(acci_rain)
+
+# 결측치 제거
+is.na(acci_rain)
+
+table(is.na(acci_rain))
+
+acci_rain <- na.omit(acci_rain)
+
+#####
+# 단계 구분도 code 합치기
+seoul_map <- read_excel('data/서울_map.xlsx')
+seoul1 <- read_excel('data/서울.xlsx') # 서울시 지역구별 코드
+View(seoul1)
+
+seoul1 <- rename(seoul1,발생지_시군구=행정구역별_읍면동)
+View(seoul1)
+seoul_code <- select(seoul1,"발생지_시군구","code")
+View(seoul_code)
+
+
+acci_gu_code <- left_join(acci_gu,seoul_code,by='발생지_시군구')
+View(acci_gu_code)
 
 
 
 
-
-# # install.packages('tidyverse')
-# library('tidyverse')
-# 
-# # install.packages('lubridate')
-# library('lubridate')
-# month(c_w$발생일)==1
-# 
-# winter <- c_w %>% filter(month(발생일)==1 | month(발생일)==2 | month(발생일)==12) %>%
-#   group_by(year(발생일))
-#   # summarise(total = sum(사고건수))
-#   
-# View(winter)
-# 
-# 
-# barplot(c_w$평균기온..C., c_w$사고건수)
 
 
 
