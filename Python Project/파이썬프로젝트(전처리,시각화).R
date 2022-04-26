@@ -11,8 +11,8 @@ library(kormaps2014) # 한국의 지역별 인구통계 데이터와 지역별 �
 library(ggiraph) # ggplot2 등의 클릭시 툴팁등이 작용
 library(ggiraphExtra) # 단계구분도를 만들기위한 패키지
 library(readxl) # xl을 불러오는 패키지
-library('tidyverse') # dplyr, tidyr, ggplot2 등 tidy 패키지 생태계에 속하는 핵심 패키지들을 한번에 설치 및 관리 (lubridate를 사용하기위한 선행 패키지)
-library('lubridate') # 날짜와 시간을 다루는 패키지
+library(tidyverse) # dplyr, tidyr, ggplot2 등 tidy 패키지 생태계에 속하는 핵심 패키지들을 한번에 설치 및 관리 (lubridate를 사용하기위한 선행 패키지)
+library(lubridate) # 날짜와 시간을 다루는 패키지
 library(scales) # 축과 범례의 파손 및 레이블을 자동으로 결정하는 방법을 제공하는 시각화를 위한 척도 함수
 library(RColorBrewer) # ggplot 색상 팔레트
 library(corrplot)# 그래프 그리기
@@ -326,6 +326,7 @@ ggplot(dura_sunshine_group, aes(x=group, y=total사고건수,group=1
 
 ##############################습도################################
 #데이터 불러오기 
+humidity <- read.csv("17-19 일별 서울 습도,일조,일사량.csv")
 crash1 <- crash[-c(2:12)] #자료가공
 
 #불러온 데이터 가공 (필요없는 속성 삭제)
@@ -390,7 +391,6 @@ plot(Humidity,                                   #x data
 
 #data4가 1월1일 자료부터 12월31일까지 일별로 총사건수가 있음
 
-View(humidity4)
 #날짜 월단위를 추가해야 알수있기에 날짜 열 추가
 colnames(humidity4) = c("date","Freq") #월단위로 바꾸기위해서 date 열이 필요하기에 열이름변경
 humidity4<-rename(humidity4,"날짜"="Var1") #Var1 이름을 명확하게 알수있게 날짜로 이름변경
