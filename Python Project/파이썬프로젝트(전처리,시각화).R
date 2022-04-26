@@ -14,6 +14,8 @@ library(readxl) # xl을 불러오는 패키지
 library('tidyverse') # dplyr, tidyr, ggplot2 등 tidy 패키지 생태계에 속하는 핵심 패키지들을 한번에 설치 및 관리 (lubridate를 사용하기위한 선행 패키지)
 library('lubridate') # 날짜와 시간을 다루는 패키지
 library(scales) # 축과 범례의 파손 및 레이블을 자동으로 결정하는 방법을 제공하는 시각화를 위한 척도 함수
+library(RColorBrewer) # ggplot 색상 팔레트
+library(corrplot)# 그래프 그리기
 
 ### 데이터 불러오기
 crash <- read.csv("data/도로교통공단_서울시 일별 시간별 교통사고 현황_20191231.csv")
@@ -23,6 +25,7 @@ humidity <- humidity[-c(1,2)] # 지점,지점명 제거(불필요)
 seoul_map <- read_excel('data/서울_map.xlsx')
 seoul1 <- read_excel('data/서울.xlsx') # 서울시 지역구별 코드
 shine <- read_csv('data/sunshine.csv',locale = locale("ko", encoding = "euc-kr")) # 일조시간
+new_cwh <- read.csv('data/교통사고_날씨_습도.csv')
 
 ## 데이터 전처리
 weather <- rename(weather, 발생지_시군구=지점명, 발생일=일시) # 날씨 데이터 변수 맞추기
@@ -32,7 +35,7 @@ humidity <- rename(humidity, 발생일=일시) # 습도 데이터 변수 맞추�
 crash_weather <- left_join(crash,weather,by=c('발생지_시군구','발생일')) # 사고와 날씨 데이터 by로 병합
 
 crash_weather_humidity <- left_join(crash_weather,humidity,by='발생일') # 사고,날씨,습도,일사 데이터 by로 병합
-View()
+
 # 복사본 생성(원본 유지)
 c_w_h <- crash_weather_humidity
 View(c_w_h)
@@ -60,10 +63,10 @@ every$발생일 <- as.Date(every$발생일)
 month(every$발생일)
 
 # 계절 그룹 생성
-every$계절 <- ifelse(month(every$발생일) >=4 & month(every$발생일) <6,
+every$계절 <- ifelse(month(every$발생일) >=3 & month(every$발생일) <6,
                    "봄",
                    ifelse(month(every$발생일) >=6 & month(every$발생일) < 9, '여름',
-                          ifelse(month(every$발생일) >=10 & month(every$발생일) < 11, '가을', '겨울')))
+                          ifelse(month(every$발생일) >=9 & month(every$발생일) < 12, '가을', '겨울')))
 
 # 계절별 사고건수 평균 dataframe 생성
 seasons <- every %>% group_by(계절) %>%
@@ -81,7 +84,7 @@ seasons$계절 <- factor(seasons$계절, level=c("겨울","여름","봄","가을
 ggplot(seasons, aes(x=계절, y=계절_사고건수평균, fill=계절_사고건수평균)) + ylim(0,120) +
   geom_bar(stat='identity')
 
-# 계절별 통행량 기사 참조하기
+# 계절별 통행량 기사 참조하기(은성님)
 
 # 년도 그룹 생성
 every$년도 <- ifelse(year(every$발생일) == 2017,
@@ -145,33 +148,56 @@ ggplot(temp_crash5, aes(기온그룹5, 사고건수평균,group=1)) +
 a_c_17 <- every %>% slice(1:357) # 17년도 
 a_c_18 <- every %>% slice(358:718) # 18년도
 a_c_19 <- every %>% slice(719:1081) # 19년도
-par(mfrow=c(1,2))
+
 # 히스토그램
 hist(every$total사고건수,plot=T,main='사고건수') # 일별 사고건수
 hist(every$일강수량,plot=T,main='강수량') # 강수량 일수
 
 ggplot(every, aes(x=total사고건수)) + geom_bar() # 사고건수량
 
-ggplot(every, aes(x=일강수량,y=total사고건수)) + geom_line(aes(group='발생일')) # 시계열
-
 # 발생일에 따른 강수량,사고건수 이중그래프 그려보기 (년도,년도총합)
 # 오른쪽에 강수량축이 있어야한다(축다르게)(표준화해서 그리기)
 # 17년도
 ggplot(a_c_17, aes(x=발생일)) +
   geom_col(aes(y=일강수량),group=1)+
-  geom_line(aes(y=total사고건수),group=1,col=c("blue"))
+  geom_line(aes(y=total사고건수),group=1,col=c("blue"))+
+  xlab("17년도 발생일")+
+  ylab("사고건수량(파랑)") +
+  scale_y_continuous(sec.axis = sec_axis(~., name = "강수량(검정)"))
+
 # 18 년도
 ggplot(a_c_18, aes(x=발생일)) +
   geom_col(aes(y=일강수량),group=1)+
-  geom_line(aes(y=total사고건수),group=1,col=c("blue"))
+  geom_line(aes(y=total사고건수),group=1,col=c("blue"))+
+  xlab("18년도 발생일")+
+  ylab("사고건수량(파랑)") +
+  scale_y_continuous(sec.axis = sec_axis(~., name = "강수량(검정)"))
+
 # 19년도
 ggplot(a_c_19, aes(x=발생일)) +
   geom_col(aes(y=일강수량),group=1)+
-  geom_line(aes(y=total사고건수),group=1,col=c("blue"))
+  geom_line(aes(y=total사고건수),group=1,col=c("blue"))+
+  xlab("19년도 발생일")+
+  ylab("사고건수량(파랑)") +
+  scale_y_continuous(sec.axis = sec_axis(~., name = "강수량(검정)"))
+
 # 17,18,19년도 총합
 ggplot(every, aes(x=발생일)) +
   geom_col(aes(y=일강수량),group=1)+
-  geom_line(aes(y=total사고건수),group=1,col=c("blue"))
+  geom_line(aes(y=total사고건수),group=1,col=c("blue"))+
+  xlab("17,18,19년도 발생일")+
+  ylab("사고건수량(파랑)") +
+  scale_y_continuous(sec.axis = sec_axis(~., name = "강수량(검정)"))
+
+# x축은 사고건수로 y축 일강수량,평균기온,습도,일조시간 (만들어야함)
+
+ggplot(every,aes(x=total사고건수,y=일강수량),group=1) + geom_col()
+ggplot(every,aes(x=total사고건수,y=mean평균기온),group=1) + geom_col()
+ggplot(every,aes(x=total사고건수,y=평균상대습도),group=1) + geom_col()
+ggplot(every,aes(x=total사고건수,y=일조시간),group=1) + geom_col()
+
+View(every)
+
 
 ## 강수량 구간별 사고건수 평균 구해서 비교하기
 # 강수량에 따른 사고건수 평균 구하기
@@ -224,14 +250,13 @@ acci_gu <- c_w_h %>%
   group_by(발생지_시군구) %>% 
   summarise(시군구별_사고건수_합 = sum(사고건수))
 
-ggplot(acci_gu,aes(x=시군구별_사고건수_합,y=발생지_시군구,fill=시군구별_사고건수_합)) + geom_col()
+ggplot(acci_gu,aes(x=reorder(발생지_시군구,시군구별_사고건수_합),y=시군구별_사고건수_합,fill=시군구별_사고건수_합)) + geom_col() + coord_flip()
 
 # 구별 사고건수 단계구분도
 
 # 단계구분도 code 부착 
 # 오류뜨면 다시 불러오기할것 (변수수정하면 그변수가 사라지기때문)
 # seoul1 <- read_excel('data/서울.xlsx') # 서울시 지역구별 코드
-# 계절별로 해볼것(봄,여름,가을,겨울)
 
 seoul1 <- rename(seoul1,발생지_시군구=행정구역별_읍면동) # seoul1 변수 수정
 
@@ -331,16 +356,11 @@ ggplot(dura_sunshine_group, aes(x=group, y=total사고건수,group=1
 
 
 
-
-
-
-
-
 ####### 회귀분석
 # 사고건수, 평균기온, 일강수량 합계, 상대습도, 일조시간 추출
 reg <- every[c(2:6)]
 reg
-
+cor(every[,2:6])
 # 산점도 행렬
 pairs(reg)
 
@@ -385,6 +405,42 @@ View(every)
 # --> mean평균기온, total일강수량, mean평균상대습도, total일조시간 각각의 변수의 p-value값이 0.05이하이다.
 # 따라서 유의수준 5%에서 각각의 변수가 사고건수에 영향을 미치는 유의한 변수라고 볼 수 있다.
 # p-value < 0.05로 유의수준 5%에서 적절한 회귀 모델이라고 판단된다.
+
+
+
+##########################################################################
+
+
+# 강수량과 평균상대습도의 상관관계
+r_s <- every[,4:5]
+cor(r_s)
+# 일강수량 평균상대습도
+# 일강수량     1.0000000    0.5064561
+
+# 강수량-평균상대습도 그래프
+corrplot(cor(r_s))
+corrplot(cor(r_s),method='num')
+
+# 사고건수,평균기온,강수량,상대습도,일조시간 상관관계 그래프
+corrplot(cor(reg))
+#숫자로
+corrplot(cor(reg),method = 'num',title='일별')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
