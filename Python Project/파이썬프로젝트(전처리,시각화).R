@@ -16,16 +16,17 @@ library('lubridate') # 날짜와 시간을 다루는 패키지
 library(scales) # 축과 범례의 파손 및 레이블을 자동으로 결정하는 방법을 제공하는 시각화를 위한 척도 함수
 library(RColorBrewer) # ggplot 색상 팔레트
 library(corrplot)# 그래프 그리기
+library(reshape2) # 데이터를 원하는 형태로 계산 또는 변형시킬수 있다.
 
 ### 데이터 불러오기
-crash <- read.csv("data/도로교통공단_서울시 일별 시간별 교통사고 현황_20191231.csv")
-weather <- read.csv("data/2017-2019날씨데이터_1.csv")
-humidity <- read.csv("data/17-19 일별 서울 습도,일조,일사량.csv")
+crash <- read.csv("도로교통공단_서울시 일별 시간별 교통사고 현황_20191231.csv")
+weather <- read.csv("2017-2019날씨데이터_1.csv")
+humidity <- read.csv("17-19 일별 서울 습도,일조,일사량.csv")
 humidity <- humidity[-c(1,2)] # 지점,지점명 제거(불필요)
-seoul_map <- read_excel('data/서울_map.xlsx')
-seoul1 <- read_excel('data/서울.xlsx') # 서울시 지역구별 코드
-shine <- read_csv('data/sunshine.csv',locale = locale("ko", encoding = "euc-kr")) # 일조시간
-new_cwh <- read.csv('data/교통사고_날씨_습도.csv')
+seoul_map <- read_excel('서울_map.xlsx')
+seoul1 <- read_excel('서울.xlsx') # 서울시 지역구별 코드
+shine <- read_csv('sunshine.csv',locale = locale("ko", encoding = "euc-kr")) # 일조시간
+new_cwh <- read.csv('교통사고_날씨_습도.csv')
 
 ## 데이터 전처리
 weather <- rename(weather, 발생지_시군구=지점명, 발생일=일시) # 날씨 데이터 변수 맞추기
@@ -373,16 +374,8 @@ b7<-mean(ac7$Freq)
 b8<-mean(ac8$Freq)  
 
 # 위 데이터 가공한 속성들로 시각화할 데이터 프레임 만들기
-Humidity<- c(20~30,30~40,40~50,50~60,60~70,70~80,80~90) #시각화할데이터의 x축 값 데이터프레임만들기
+
 Freq<- c(96,103,105,103,104,104,110) # y축값 데이터프레임
-dfc <- data.frame(Humidity = c(20~30,30~40,40~50,50~60,60~70,70~80,80~90), #x축,y축 통합 
-                  Freq = c(96,103,105,103,104,104,110))  
-
-# 막대 그래프그리기
-ggplot(data,aes(x=Humidity,y=Freq))+ # 막대그래프 버젼으로 시각화 
-  geom_bar(stat="identity")
-# 다른 시각화 자료에 맞춰서 선그래프로 변경 
-
 Humidity <-c(20,30,40,50,60,70,80)  # 선그래프 버젼 x축 20~30 은 데이터값이 달라져서 안넣어져서 새로 만듬
 #선그래프 그리기 
 plot(Humidity,                                   #x data
@@ -397,7 +390,7 @@ plot(Humidity,                                   #x data
 
 #data4가 1월1일 자료부터 12월31일까지 일별로 총사건수가 있음
 
-
+View(humidity4)
 #날짜 월단위를 추가해야 알수있기에 날짜 열 추가
 colnames(humidity4) = c("date","Freq") #월단위로 바꾸기위해서 date 열이 필요하기에 열이름변경
 humidity4<-rename(humidity4,"날짜"="Var1") #Var1 이름을 명확하게 알수있게 날짜로 이름변경
@@ -405,7 +398,6 @@ humidity4<-rename(humidity4,"날짜"="Var1") #Var1 이름을 명확하게 알수
 dw <- cbind(humidity5, month=month(humidity5$일시)) #month 월단위 1월 2월 3월 열 추가 및 분류
 #month 월단위 기준으로 Freq값을 다더해서 월단위 그래프 값준비완료
 dw2<-dcast(dw, month ~ . , value.var="Freq", sum) # month 값을 기준으로 Freq 총 사건수양을 다더하기
-
 
 #그래프에 이름을 넣기위해 열이름 x축값 y축값으로 미리 이름변경
 names(dw2)=c("월","총사건수") #이름 변경
